@@ -18,6 +18,9 @@ public class Player : MonoBehaviour
     public int health;
     public int hasGrenades;
 
+    // 메인 카메라 변수
+    public Camera followCamera;
+
     // 최대치
     public int maxAmmo;
     public int maxCoin;
@@ -31,6 +34,11 @@ public class Player : MonoBehaviour
     bool walkDown;
     bool jumpDown;
 
+    // 공격 실행
+    bool attackDown;
+    // 장전
+    bool reloadDown;
+
     // 상호작용 여부(아이템 기준)
     bool interactionDown;
 
@@ -43,6 +51,10 @@ public class Player : MonoBehaviour
     bool isJump;
     bool isDodge;
     bool isSwap;
+    bool isReload;
+
+    // 공격 가능 여부 확인
+    bool isReadyToAttack = true;
 
 
     Vector3 moveVector;
@@ -55,9 +67,11 @@ public class Player : MonoBehaviour
     // 트리거 된 아이템을 저장하기 위한 변수 선언
     GameObject nearObject;
     // 현재 장착중인 무기 정보를 저장
-    GameObject equipWeapon;
+    Weapon equipWeapon;
     // 첫번째 무기는 index = 0이니까 막기
     int equipWeaponIndex = -1;
+    // 공격 딜레이 시간
+    float attackDelay;
 
     void Awake()
     {
@@ -74,6 +88,8 @@ public class Player : MonoBehaviour
         Turn();
         Jump();
         Dodge();
+        Attack();
+        Reload();
         Interaction();
         Swap();
     }
@@ -86,6 +102,8 @@ public class Player : MonoBehaviour
         verticalAxis = Input.GetAxisRaw("Vertical");
         walkDown = Input.GetButton("Walk");
         jumpDown = Input.GetButtonDown("Jump");
+        attackDown = Input.GetButton("Fire1");
+        reloadDown = Input.GetButtonDown("Reload");
         // q키로 설정했다.
         interactionDown = Input.GetButtonDown("Interaction");
         // 무기 교환 키
@@ -104,8 +122,11 @@ public class Player : MonoBehaviour
 
 
         // 아이템 스왑중에는 움직임 막기
-        if (isSwap)
+        // 공격중에는 움직임 막기
+        if (isSwap || !isReadyToAttack || isReload)
             moveVector = Vector3.zero;
+
+
 
 
         // if (walkDown)
@@ -122,7 +143,27 @@ public class Player : MonoBehaviour
 
     void Turn()
     {
+        // 키보드에 의한 회전
         transform.LookAt(transform.position + moveVector);
+
+        // 마우스에 의한 회전
+        if (attackDown)
+        {
+            // 위의 if문이 없으면 그냥 계속 마우스 따라 캐릭터가 회전
+            Ray ray = followCamera.ScreenPointToRay(Input.mousePosition);
+            // RaycastHit 정보를 저장할 변수 
+            RaycastHit rayHit;
+            // out : return 처럼 반환값을 주어진 변수에 저장하는 키워드
+            // 아래의 경우 반환값이 rayHit에 저장
+            if (Physics.Raycast(ray, out rayHit, 100))
+            {
+                // point : rayHit이 찍어진 위치
+                Vector3 nextVector = rayHit.point - transform.position;
+                // y값이 존재하면 벽이나 위쪽을 보게 되면 애가 기울어짐
+                nextVector.y = 0;
+                transform.LookAt(transform.position + nextVector);
+            }
+        }
     }
 
     void Jump()
@@ -136,6 +177,50 @@ public class Player : MonoBehaviour
             anim.SetTrigger("doJump");
             isJump = true;
         }
+    }
+
+    void Attack()
+    {
+        // 손에 무기가 없으면 공격 못함
+        if (equipWeapon == null) return;
+
+        attackDelay += Time.deltaTime;
+        // 공속이 딜레이 시간보다 작은 경우에 공격이 가능
+        isReadyToAttack = equipWeapon.rate < attackDelay;
+
+        // 공격 키를 누르고 공격 준비가 되고 피하거나 무기 교환 중이 아닌경우
+        if (attackDown && isReadyToAttack && !isDodge && !isSwap)
+        {
+            equipWeapon.Use();
+            anim.SetTrigger(equipWeapon.type == Weapon.Type.Melee ? "doSwing" : "doShot");
+            attackDelay = 0;
+        }
+    }
+
+    void Reload()
+    {
+        if (equipWeapon == null) return;
+
+        if (equipWeapon.type == Weapon.Type.Melee) return;
+
+        if (ammo == 0) return;
+
+        if (reloadDown && !isJump && !isDodge && !isSwap && isReadyToAttack)
+        {
+            anim.SetTrigger("doReload");
+            isReload = true;
+
+            Invoke("ReloadOut", 1f);
+        }
+    }
+
+    void ReloadOut()
+    {
+        // 재장전되는 탄환의 개수를 구해서 넣자
+        int reAmmo = ammo < equipWeapon.maxAmmo ? ammo : equipWeapon.maxAmmo;
+        equipWeapon.currentAmmo = reAmmo;
+        ammo -= reAmmo;
+        isReload = false;
     }
 
     void Dodge()
@@ -181,12 +266,12 @@ public class Player : MonoBehaviour
         {
             // 빈손인 경우에 조건을 추가하자
             if (equipWeapon != null)
-                equipWeapon.SetActive(false);
+                equipWeapon.gameObject.SetActive(false);
 
             equipWeaponIndex = weaponIndex;
-            equipWeapon = weapons[weaponIndex];
+            equipWeapon = weapons[weaponIndex].GetComponent<Weapon>();
             // 해당 무기의 인덱스 값을 활성화 시키기
-            equipWeapon.SetActive(true);
+            equipWeapon.gameObject.SetActive(true);
 
             // unity에서 animator에서 설정한 움직임을 트리거하는 코드
             anim.SetTrigger("doSwap");
@@ -255,8 +340,12 @@ public class Player : MonoBehaviour
                     if (health > maxHealth) health = maxHealth;
                     break;
                 case Items.Type.Grenade:
+                    if (hasGrenades == maxHasGrenades) return;
+                    grenades[hasGrenades].SetActive(true);
                     hasGrenades += item.value;
                     if (hasGrenades > maxHasGrenades) hasGrenades = maxHasGrenades;
+
+
                     break;
             }
 
