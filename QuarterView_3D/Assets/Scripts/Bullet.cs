@@ -14,7 +14,11 @@ public class Bullet : MonoBehaviour
             // 1초뒤에 바닥에서 총알 없애기
             Destroy(gameObject, 1);
         }
-        else if (collision.gameObject.tag == "Wall")
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.tag == "Wall")
         {
             Destroy(gameObject);
         }

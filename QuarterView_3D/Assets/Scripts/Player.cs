@@ -12,6 +12,9 @@ public class Player : MonoBehaviour
     // 수류탄 배열 => 캐릭터 주위에서 둥둥 떠다닐 예정
     public GameObject[] grenades;
 
+    // 수류탄을 저장해줄 수류탄 객체 변수
+    public GameObject grenadeObject;
+
     // 탄약, 동전, 체력, 수류탄 변수
     public int ammo;
     public int coin;
@@ -36,6 +39,8 @@ public class Player : MonoBehaviour
 
     // 공격 실행
     bool attackDown;
+    // 수류탄 공격
+    bool grenadeDown;
     // 장전
     bool reloadDown;
 
@@ -55,6 +60,9 @@ public class Player : MonoBehaviour
 
     // 공격 가능 여부 확인
     bool isReadyToAttack = true;
+
+    // 벽에 충돌했는지 판별해주는 변수
+    bool isBorder;
 
 
     Vector3 moveVector;
@@ -89,6 +97,7 @@ public class Player : MonoBehaviour
         Jump();
         Dodge();
         Attack();
+        Grenade();
         Reload();
         Interaction();
         Swap();
@@ -102,7 +111,9 @@ public class Player : MonoBehaviour
         verticalAxis = Input.GetAxisRaw("Vertical");
         walkDown = Input.GetButton("Walk");
         jumpDown = Input.GetButtonDown("Jump");
+
         attackDown = Input.GetButton("Fire1");
+        grenadeDown = Input.GetButton("Fire2");
         reloadDown = Input.GetButtonDown("Reload");
         // q키로 설정했다.
         interactionDown = Input.GetButtonDown("Interaction");
@@ -126,14 +137,14 @@ public class Player : MonoBehaviour
         if (isSwap || !isReadyToAttack || isReload)
             moveVector = Vector3.zero;
 
-
-
+        // 벽에 닿지 않은 경우에만 움직이자는 조건을 추가 설정
+        if (!isBorder)
+            transform.position += moveVector * speed * (walkDown ? 0.3f : 1f) * Time.deltaTime;
 
         // if (walkDown)
         //     transform.position += moveVector * speed * 0.3f * Time.deltaTime;
         // else
         //     transform.position += moveVector * speed * Time.deltaTime;
-        transform.position += moveVector * speed * (walkDown ? 0.3f : 1f) * Time.deltaTime;
 
 
         // SetBool()값으로 파라미터 값을 설정
@@ -194,6 +205,40 @@ public class Player : MonoBehaviour
             equipWeapon.Use();
             anim.SetTrigger(equipWeapon.type == Weapon.Type.Melee ? "doSwing" : "doShot");
             attackDelay = 0;
+        }
+    }
+
+    void Grenade()
+    {
+        if (hasGrenades == 0)
+        {
+            return;
+        }
+
+        if (grenadeDown && !isReload && !isSwap)
+        {
+            Ray ray = followCamera.ScreenPointToRay(Input.mousePosition); 
+            RaycastHit rayHit;
+            if (Physics.Raycast(ray, out rayHit, 100))
+            {
+                Vector3 nextVector = rayHit.point - transform.position;
+                // 살짝 위로 날아가게 하기 위해
+                nextVector.y = 5;
+
+                // 수류탄 물체를 바로 생성해주고
+                GameObject instantGrenade = Instantiate(grenadeObject, transform.position, transform.rotation);
+                // rigidbody를 수류탄에게 심어주어 물리 효과를 주자
+                Rigidbody rigidGrenade = instantGrenade.GetComponent<Rigidbody>();
+                // 해당 방향으로 수류탄을 던져보자
+                rigidGrenade.AddForce(nextVector, ForceMode.Impulse);
+                // 수류탄에 회전을 줌
+                rigidGrenade.AddTorque(Vector3.back * 10, ForceMode.Impulse);
+
+                // 수류탄 썻으니까 개수 줄이고
+                hasGrenades--;
+                // 주변에 떠다니는 수류탄 하나 비활성화 하기
+                grenades[hasGrenades].SetActive(false);
+            }
         }
     }
 
@@ -354,13 +399,32 @@ public class Player : MonoBehaviour
     }
 
 
+    void FreezeRotation()
+    {
+        // AngularVelocity : 물리 회전 속도
+        // 이 값을 0으로 선언해주어 꾸준히 회전을 방지해준다
+        rigid.angularVelocity = Vector3.zero;
+    }
+
+    void StopToWall()
+    {
+        Debug.DrawRay(transform.position, transform.forward * 5, Color.green);
+        // Wall이라는 LayerMask를 가진 친구와 부닥치면 isBorder 값이 True가 되게 해준다
+        isBorder = Physics.Raycast(transform.position, transform.forward, 5, LayerMask.GetMask("Wall"));
+    }
+
+
+    void FixedUpdate()
+    {
+        FreezeRotation();
+        StopToWall();
+    }
+
     // 무기 주변에 갔을 때 
     void OnTriggerStay(Collider other)
     {
         if (other.tag == "Weapon")
             nearObject = other.gameObject;
-
-        Debug.Log(nearObject.name);
     }
 
 

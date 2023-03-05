@@ -65,10 +65,10 @@ public class Weapon : MonoBehaviour
         // 효과도 활성화
         trailEffect.enabled = true;
 
-        yield return new WaitForSeconds(0.3f);
+        yield return new WaitForSeconds(0.6f);
         meleeArea.enabled = false;
 
-        yield return new WaitForSeconds(0.3f);
+        yield return new WaitForSeconds(0.6f);
         trailEffect.enabled = false;
 
         yield break; // 코루틴 탈출

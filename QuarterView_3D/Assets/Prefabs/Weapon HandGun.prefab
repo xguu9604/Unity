@@ -4999,8 +4999,8 @@ GameObject:
   m_Component:
   - component: {fileID: 4534815281800339314}
   - component: {fileID: 2402582880010781082}
-  - component: {fileID: 2402582880010781060}
   - component: {fileID: 2402582880010781061}
+  - component: {fileID: 2402582880010781060}
   - component: {fileID: 2402582880010781062}
   m_Layer: 0
   m_Name: Weapon HandGun
@@ -5043,19 +5043,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!135 &2402582880010781060
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3865556141258343880}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 1
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 3
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!135 &2402582880010781061
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -5068,6 +5055,19 @@ SphereCollider:
   m_Enabled: 1
   serializedVersion: 2
   m_Radius: 0.5
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!135 &2402582880010781060
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3865556141258343880}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 3
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &2402582880010781062
 MonoBehaviour:

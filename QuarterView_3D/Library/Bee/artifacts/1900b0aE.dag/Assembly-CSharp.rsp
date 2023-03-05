@@ -352,6 +352,8 @@
 "Assets/QuarterView 3D Action BE5/ReadMe/Scripts/ReadmeBE5.cs"
 "Assets/Scripts/Bullet.cs"
 "Assets/Scripts/Follower.cs"
+"Assets/Scripts/Grenade.cs"
+"Assets/Scripts/HitBox.cs"
 "Assets/Scripts/Items.cs"
 "Assets/Scripts/Orbit.cs"
 "Assets/Scripts/Player.cs"
