@@ -64,6 +64,8 @@ public class Player : MonoBehaviour
     // 벽에 충돌했는지 판별해주는 변수
     bool isBorder;
 
+    // 피격을 무한정으로 받아서 그냥 뒤지는 걸 막기 위한 무적 타임
+    bool isDamaged;
 
     Vector3 moveVector;
     // 회피하는 동안 방향 전환 막기 위해 사용
@@ -71,6 +73,9 @@ public class Player : MonoBehaviour
     // 물리 효과를 위해 RigidBody 변수 선언
     Rigidbody rigid;
     Animator anim;
+
+    // 무적 상태 표현
+    MeshRenderer[] meshes;
 
     // 트리거 된 아이템을 저장하기 위한 변수 선언
     GameObject nearObject;
@@ -85,7 +90,10 @@ public class Player : MonoBehaviour
     {
         // 초기화 작업
         rigid = GetComponent<Rigidbody>();
+        // 자식 컴포넌트중 맨 위의 친구만
         anim = GetComponentInChildren<Animator>();
+        // 자식 컴포넌트 모두를 가져온다.
+        meshes = GetComponentsInChildren<MeshRenderer>();
     }
 
 
@@ -396,8 +404,39 @@ public class Player : MonoBehaviour
 
             Destroy(other.gameObject);
         }
+
+        else if (other.tag == "EnemyBullet")
+        {
+            if (!isDamaged)
+            {
+                Bullet enemyBullet = other.GetComponent<Bullet>();
+                health -= enemyBullet.damage;
+                // 미사일에 맞았을때 투사체 지워주기
+                // 적의 공격중 미사일 제외 모두 근접기라 rigidbody가 없음!
+                if (other.GetComponent<Rigidbody>() != null) Destroy(other.gameObject);
+
+                StartCoroutine(OnDamage());
+            }
+        }
     }
 
+
+    IEnumerator OnDamage()
+    {
+        isDamaged = true;
+        foreach(MeshRenderer mesh in meshes)
+        {
+            mesh.material.color = Color.magenta;
+        }
+
+        yield return new WaitForSeconds(1f);
+
+        isDamaged = false;
+        foreach (MeshRenderer mesh in meshes)
+        {
+            mesh.material.color = Color.white;
+        }
+    }
 
     void FreezeRotation()
     {

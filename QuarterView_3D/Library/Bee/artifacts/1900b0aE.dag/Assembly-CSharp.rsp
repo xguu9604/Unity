@@ -355,6 +355,7 @@
 "Assets/Scripts/Grenade.cs"
 "Assets/Scripts/HitBox.cs"
 "Assets/Scripts/Items.cs"
+"Assets/Scripts/Missile.cs"
 "Assets/Scripts/Orbit.cs"
 "Assets/Scripts/Player.cs"
 "Assets/Scripts/Weapon.cs"
