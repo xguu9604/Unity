@@ -411,23 +411,29 @@ public class Player : MonoBehaviour
             {
                 Bullet enemyBullet = other.GetComponent<Bullet>();
                 health -= enemyBullet.damage;
-                // 미사일에 맞았을때 투사체 지워주기
-                // 적의 공격중 미사일 제외 모두 근접기라 rigidbody가 없음!
-                if (other.GetComponent<Rigidbody>() != null) Destroy(other.gameObject);
 
-                StartCoroutine(OnDamage());
+                bool isBossAttack = other.name == "Boss Melee Area";
+                StartCoroutine(OnDamage(isBossAttack));
             }
+
+            // 미사일에 맞았을때 투사체 지워주기(무적시간과 상관없이)
+            // 적의 공격중 미사일 제외 모두 근접기라 rigidbody가 없음!
+            if (other.GetComponent<Rigidbody>() != null) Destroy(other.gameObject);
         }
     }
 
 
-    IEnumerator OnDamage()
+    IEnumerator OnDamage(bool isBossAttack)
     {
         isDamaged = true;
         foreach(MeshRenderer mesh in meshes)
         {
             mesh.material.color = Color.magenta;
         }
+
+        // 보스 내려찍기인 경우에 넉백을 주자
+        if (isBossAttack)
+            rigid.AddForce(transform.forward * -25, ForceMode.Impulse);
 
         yield return new WaitForSeconds(1f);
 
@@ -436,6 +442,10 @@ public class Player : MonoBehaviour
         {
             mesh.material.color = Color.white;
         }
+
+        // 1초후에 넉백 멈춰!
+        if (isBossAttack)
+            rigid.velocity = Vector3.zero;
     }
 
     void FreezeRotation()

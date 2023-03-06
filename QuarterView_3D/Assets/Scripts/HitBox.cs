@@ -7,7 +7,7 @@ using UnityEngine.AI;
 
 public class HitBox : MonoBehaviour
 {
-    public enum Type { A, B, C };
+    public enum Type { A, B, C, D };
     public Type enemyType;
     public int maxHealth;
     public int curHealth;
@@ -16,24 +16,28 @@ public class HitBox : MonoBehaviour
     public GameObject bullet;
     public bool isChase;
     public bool isAttack;
+    public bool isDead;
+    
 
-    Rigidbody rigid;
-    BoxCollider boxCollider;
-    Material material;
-    NavMeshAgent nav;
-    Animator anim;
+    public Rigidbody rigid;
+    public BoxCollider boxCollider;
+    public MeshRenderer[] meshes;
+    public NavMeshAgent nav;
+    public Animator anim;
 
     void Awake()
     {
         rigid = GetComponent<Rigidbody>();
         boxCollider = GetComponent<BoxCollider>();
         // material의 경우 MeshRenderer에 접근해서 material로 가야함
-        material = GetComponentInChildren<MeshRenderer>().material;
+        meshes = GetComponentsInChildren<MeshRenderer>();
         nav = GetComponent<NavMeshAgent>();
         anim = GetComponentInChildren<Animator>();
 
-        // 생성 후 2초후에 따라다니기 시작
-        Invoke("ChaseStart", 2);
+
+        if (enemyType != Type.D) 
+            // 생성 후 2초후에 따라다니기 시작
+            Invoke("ChaseStart", 2);
     }
 
     void ChaseStart()
@@ -44,7 +48,7 @@ public class HitBox : MonoBehaviour
 
     void Update()
     {
-        if (nav.enabled)
+        if (nav.enabled && enemyType != Type.D)
         {
             // 도착할 목표 위치를 지정해주는 함수
             nav.SetDestination(target.position);
@@ -65,35 +69,38 @@ public class HitBox : MonoBehaviour
 
     void Targeting()
     {
-        float targetRadius = 0;
-        float targetRange = 0;
-
-        switch (enemyType)
+        if (!isDead && enemyType != Type.D)
         {
-            case Type.A:
-                targetRadius = 1.5f;
-                targetRange = 3f;
-                break;
-            case Type.B:
-                targetRadius = 1f;
-                targetRange = 6f;
-                break;
-            case Type.C:
-                targetRadius = 0.5f;
-                targetRange = 25f;
-                break;
-        }
+            float targetRadius = 0;
+            float targetRange = 0;
 
-        RaycastHit[] rayHits =
-            Physics.SphereCastAll(transform.position,
-                                    targetRadius,
-                                    transform.forward,
-                                    targetRange,
-                                    LayerMask.GetMask("Player"));
+            switch (enemyType)
+            {
+                case Type.A:
+                    targetRadius = 1.5f;
+                    targetRange = 3f;
+                    break;
+                case Type.B:
+                    targetRadius = 1f;
+                    targetRange = 6f;
+                    break;
+                case Type.C:
+                    targetRadius = 0.5f;
+                    targetRange = 25f;
+                    break;
+            }
 
-        if (rayHits.Length > 0 && !isAttack)
-        {
-            StartCoroutine(Attack());
+            RaycastHit[] rayHits =
+                Physics.SphereCastAll(transform.position,
+                                        targetRadius,
+                                        transform.forward,
+                                        targetRange,
+                                        LayerMask.GetMask("Player"));
+
+            if (rayHits.Length > 0 && !isAttack)
+            {
+                StartCoroutine(Attack());
+            }
         }
     }
 
@@ -133,7 +140,9 @@ public class HitBox : MonoBehaviour
 
             case Type.C:
                 yield return new WaitForSeconds(0.5f);
-                GameObject instantBullet = Instantiate(bullet, transform.position, transform.rotation);
+                // 미사일이 바닥에 박혀서 나가서 보정값을 줌
+                Vector3 startVector = transform.position + Vector3.up * 1.5f;
+                GameObject instantBullet = Instantiate(bullet, startVector, transform.rotation);
                 Rigidbody rigidBullet = instantBullet.GetComponent<Rigidbody>();
                 rigidBullet.velocity = transform.forward * 20;
 
@@ -186,18 +195,23 @@ public class HitBox : MonoBehaviour
 
     IEnumerator OnDamage(Vector3 reactVector, bool isGrenade)
     {
-        material.color = Color.red;
+        foreach (MeshRenderer mesh in meshes)
+            mesh.material.color = Color.red;
+
         yield return new WaitForSeconds(0.1f);
 
         if (curHealth > 0) 
         {
-            material.color = Color.white;
+            foreach (MeshRenderer mesh in meshes)
+                mesh.material.color = Color.white;
         }
         else
         {
-            material.color = Color.gray;
+            foreach (MeshRenderer mesh in meshes)
+                mesh.material.color = Color.gray;
             // 죽음 처리를 위해 죽은 적을 선언한 14번째 레이어로 교환
             gameObject.layer = 14;
+            isDead = true;
             isChase = false;
             // 위로 튀는걸 막은걸 해제
             nav.enabled = false;
@@ -225,7 +239,8 @@ public class HitBox : MonoBehaviour
                 rigid.AddForce(reactVector * 5, ForceMode.Impulse);
             }
 
-            Destroy(gameObject, 3);
+            if (enemyType != Type.D)
+                Destroy(gameObject, 3);
         }
     }
 }
