@@ -19,6 +19,7 @@ public class Player : MonoBehaviour
     public int ammo;
     public int coin;
     public int health;
+    public int score;
     public int hasGrenades;
 
     // 메인 카메라 변수
@@ -67,6 +68,9 @@ public class Player : MonoBehaviour
     // 피격을 무한정으로 받아서 그냥 뒤지는 걸 막기 위한 무적 타임
     bool isDamaged;
 
+    // 쇼핑중에는 다른 행동 막기
+    bool isShop;
+
     Vector3 moveVector;
     // 회피하는 동안 방향 전환 막기 위해 사용
     Vector3 dodgeVector;
@@ -80,7 +84,7 @@ public class Player : MonoBehaviour
     // 트리거 된 아이템을 저장하기 위한 변수 선언
     GameObject nearObject;
     // 현재 장착중인 무기 정보를 저장
-    Weapon equipWeapon;
+    public Weapon equipWeapon;
     // 첫번째 무기는 index = 0이니까 막기
     int equipWeaponIndex = -1;
     // 공격 딜레이 시간
@@ -94,6 +98,9 @@ public class Player : MonoBehaviour
         anim = GetComponentInChildren<Animator>();
         // 자식 컴포넌트 모두를 가져온다.
         meshes = GetComponentsInChildren<MeshRenderer>();
+
+        // 유니티에서 제공해주는 저장 기능
+        PlayerPrefs.SetInt("MaxScore", 11211);
     }
 
 
@@ -121,7 +128,7 @@ public class Player : MonoBehaviour
         jumpDown = Input.GetButtonDown("Jump");
 
         attackDown = Input.GetButton("Fire1");
-        grenadeDown = Input.GetButton("Fire2");
+        grenadeDown = Input.GetButtonDown("Fire2");
         reloadDown = Input.GetButtonDown("Reload");
         // q키로 설정했다.
         interactionDown = Input.GetButtonDown("Interaction");
@@ -187,7 +194,7 @@ public class Player : MonoBehaviour
 
     void Jump()
     {
-        if (jumpDown && !isJump && moveVector == Vector3.zero && !isDodge && !isSwap) {
+        if (jumpDown && !isJump && moveVector == Vector3.zero && !isDodge && !isSwap && !isShop) {
             // 중력값을 크게 주면 점프 크기가 작아진다
             // 따라서 중력을 늘리면서 점프 크기를 유지하려면 여기서 더 큰 값을 곱해주면 됨
             rigid.AddForce(Vector3.up * 15, ForceMode.Impulse);
@@ -208,7 +215,7 @@ public class Player : MonoBehaviour
         isReadyToAttack = equipWeapon.rate < attackDelay;
 
         // 공격 키를 누르고 공격 준비가 되고 피하거나 무기 교환 중이 아닌경우
-        if (attackDown && isReadyToAttack && !isDodge && !isSwap)
+        if (attackDown && isReadyToAttack && !isDodge && !isSwap && !isShop)
         {
             equipWeapon.Use();
             anim.SetTrigger(equipWeapon.type == Weapon.Type.Melee ? "doSwing" : "doShot");
@@ -258,7 +265,7 @@ public class Player : MonoBehaviour
 
         if (ammo == 0) return;
 
-        if (reloadDown && !isJump && !isDodge && !isSwap && isReadyToAttack)
+        if (reloadDown && !isJump && !isDodge && !isSwap && isReadyToAttack && !isShop)
         {
             anim.SetTrigger("doReload");
             isReload = true;
@@ -278,7 +285,7 @@ public class Player : MonoBehaviour
 
     void Dodge()
     {
-        if (jumpDown && !isJump && moveVector != Vector3.zero && !isDodge && !isSwap) {
+        if (jumpDown && !isJump && moveVector != Vector3.zero && !isDodge && !isSwap && !isShop) {
             dodgeVector = moveVector;
             speed *= 2;
             anim.SetTrigger("doDodge");
@@ -358,6 +365,13 @@ public class Player : MonoBehaviour
 
                 // 무기를 먹었으니 무기를 없애자
                 Destroy(nearObject);
+            }
+            else if (nearObject.tag == "Shop")
+            {
+                Shop shop = nearObject.GetComponent<Shop>();
+                // 플레이어 스크립트이니까 자기 자신을 넣어주자
+                shop.Enter(this);
+                isShop = true;
             }
         }
     }
@@ -472,7 +486,7 @@ public class Player : MonoBehaviour
     // 무기 주변에 갔을 때 
     void OnTriggerStay(Collider other)
     {
-        if (other.tag == "Weapon")
+        if (other.tag == "Weapon" || other.tag == "Shop")
             nearObject = other.gameObject;
     }
 
@@ -482,5 +496,12 @@ public class Player : MonoBehaviour
     {
         if (other.tag == "Weapon")
             nearObject = null;
+        else if (other.tag == "Shop")
+        {
+            Shop shop = nearObject.GetComponent<Shop>();
+            shop.Exit();
+            nearObject = null;
+            isShop = false;
+        }
     }
 }
