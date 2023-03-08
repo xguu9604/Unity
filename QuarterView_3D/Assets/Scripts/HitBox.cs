@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditorInternal.Profiling.Memory.Experimental.FileFormat;
 using UnityEngine;
 // NavMeshAgent를 사용하기 위해서 불러와야 하는 친구
 using UnityEngine.AI;
@@ -11,9 +10,15 @@ public class HitBox : MonoBehaviour
     public Type enemyType;
     public int maxHealth;
     public int curHealth;
+    // 몹 처지후에 주는 점수
+    public int score;
+    // 몹이 죽었을 때 몬스터 카운팅에 적용하기 위해 불러오기
+    public GameManager gameManager;
     public Transform target;
     public BoxCollider meleeArea;
     public GameObject bullet;
+    // 몹 처지 후 생기는 코인 보상들
+    public GameObject[] coins;
     public bool isChase;
     public bool isAttack;
     public bool isDead;
@@ -200,47 +205,74 @@ public class HitBox : MonoBehaviour
 
         yield return new WaitForSeconds(0.1f);
 
-        if (curHealth > 0) 
+        if (!isDead)
         {
-            foreach (MeshRenderer mesh in meshes)
-                mesh.material.color = Color.white;
-        }
-        else
-        {
-            foreach (MeshRenderer mesh in meshes)
-                mesh.material.color = Color.gray;
-            // 죽음 처리를 위해 죽은 적을 선언한 14번째 레이어로 교환
-            gameObject.layer = 14;
-            isDead = true;
-            isChase = false;
-            // 위로 튀는걸 막은걸 해제
-            nav.enabled = false;
-            anim.SetTrigger("doDie");
-            if (isGrenade)
+            if (curHealth > 0) 
             {
-                // 방향 크기를 1로 평균값으로 만들기
-                reactVector = reactVector.normalized;
-                // 더 큰 효과를 주자
-                reactVector += Vector3.up * 3;
-
-                rigid.freezeRotation = false;
-                // 공격 방향으로 스윽 힘 추가
-                rigid.AddForce(reactVector * 5, ForceMode.Impulse);
-                rigid.AddTorque(reactVector * 15, ForceMode.Impulse);
+                foreach (MeshRenderer mesh in meshes)
+                    mesh.material.color = Color.white;
             }
             else
             {
-                // 방향 크기를 1로 평균값으로 만들기
-                reactVector = reactVector.normalized;
-                // 살짝 위로 뜨는 방향추가
-                reactVector += Vector3.up;
+                foreach (MeshRenderer mesh in meshes)
+                    mesh.material.color = Color.gray;
+                // 죽음 처리를 위해 죽은 적을 선언한 14번째 레이어로 교환
+                gameObject.layer = 14;
+                isDead = true;
+                isChase = false;
+                // 위로 튀는걸 막은걸 해제
+                nav.enabled = false;
+                anim.SetTrigger("doDie");
 
-                // 공격 방향으로 스윽 힘 추가
-                rigid.AddForce(reactVector * 5, ForceMode.Impulse);
+
+                Player player = target.GetComponent<Player>();
+                player.score += score;
+                int randomCoin = Random.Range(0, 3);
+                // Quaternion.identity : 로테이션 값인데 일단 알아두기
+                Instantiate(coins[randomCoin], transform.position, Quaternion.identity);
+
+               switch (enemyType)
+                {
+                    case Type.A:
+                        gameManager.enemyCntA--;
+                        break;
+                    case Type.B:
+                        gameManager.enemyCntB--;
+                        break;
+                    case Type.C:
+                        gameManager.enemyCntC--;
+                        break;
+                    case Type.D:
+                        gameManager.enemyCntD--;
+                        break;
+                }
+
+                if (isGrenade)
+                {
+                    // 방향 크기를 1로 평균값으로 만들기
+                    reactVector = reactVector.normalized;
+                    // 더 큰 효과를 주자
+                    reactVector += Vector3.up * 3;
+
+                    rigid.freezeRotation = false;
+                    // 공격 방향으로 스윽 힘 추가
+                    rigid.AddForce(reactVector * 5, ForceMode.Impulse);
+                    rigid.AddTorque(reactVector * 15, ForceMode.Impulse);
+                }
+                else
+                {
+                    // 방향 크기를 1로 평균값으로 만들기
+                    reactVector = reactVector.normalized;
+                    // 살짝 위로 뜨는 방향추가
+                    reactVector += Vector3.up;
+
+                    // 공격 방향으로 스윽 힘 추가
+                    rigid.AddForce(reactVector * 5, ForceMode.Impulse);
+                }
+
+                Destroy(gameObject, 2);
             }
 
-            if (enemyType != Type.D)
-                Destroy(gameObject, 3);
         }
     }
 }

@@ -162,7 +162,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 76fdbcadf22399f43aae019d460e0b3d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  damage: 12
+  damage: 10
   isMelee: 0
   isRock: 0
   target: {fileID: 0}
@@ -176,7 +176,7 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.5
-  m_Speed: 30
+  m_Speed: 20
   m_Acceleration: 30
   avoidancePriority: 50
   m_AngularSpeed: 360

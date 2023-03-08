@@ -79,13 +79,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enemyType: 1
-  maxHealth: 80
-  curHealth: 80
+  maxHealth: 150
+  curHealth: 150
+  score: 100
+  gameManager: {fileID: 0}
   target: {fileID: 0}
   meleeArea: {fileID: 4726568054077982345}
   bullet: {fileID: 0}
+  coins:
+  - {fileID: 8601086283902466961, guid: f16d3018ce16e334fa2ac169c805bc0d, type: 3}
+  - {fileID: 364198795933974703, guid: 6c008723310c9dc4b8e96dc14cf0a332, type: 3}
+  - {fileID: 585727204756059563, guid: ed979c5bfeecfac47b6448f0060fee55, type: 3}
   isChase: 0
   isAttack: 0
+  isDead: 0
+  rigid: {fileID: 0}
+  boxCollider: {fileID: 0}
+  meshes: []
+  nav: {fileID: 0}
+  anim: {fileID: 0}
 --- !u!195 &4726568053546688726
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -166,8 +178,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 311f55bc29dc2ae449a5dab56f7f7bd7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  damage: 10
+  damage: 20
   isMelee: 1
+  isRock: 0
 --- !u!1001 &8747024122778844043
 PrefabInstance:
   m_ObjectHideFlags: 0

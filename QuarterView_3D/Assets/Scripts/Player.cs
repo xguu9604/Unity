@@ -25,6 +25,8 @@ public class Player : MonoBehaviour
     // 메인 카메라 변수
     public Camera followCamera;
 
+    public GameManager manager;
+
     // 최대치
     public int maxAmmo;
     public int maxCoin;
@@ -70,6 +72,9 @@ public class Player : MonoBehaviour
 
     // 쇼핑중에는 다른 행동 막기
     bool isShop;
+
+    // 죽은 경우 체킹
+    bool isDead;
 
     Vector3 moveVector;
     // 회피하는 동안 방향 전환 막기 위해 사용
@@ -149,7 +154,7 @@ public class Player : MonoBehaviour
 
         // 아이템 스왑중에는 움직임 막기
         // 공격중에는 움직임 막기
-        if (isSwap || !isReadyToAttack || isReload)
+        if (isSwap || !isReadyToAttack || isReload || isDead)
             moveVector = Vector3.zero;
 
         // 벽에 닿지 않은 경우에만 움직이자는 조건을 추가 설정
@@ -173,7 +178,7 @@ public class Player : MonoBehaviour
         transform.LookAt(transform.position + moveVector);
 
         // 마우스에 의한 회전
-        if (attackDown)
+        if (attackDown && !isDead)
         {
             // 위의 if문이 없으면 그냥 계속 마우스 따라 캐릭터가 회전
             Ray ray = followCamera.ScreenPointToRay(Input.mousePosition);
@@ -194,7 +199,7 @@ public class Player : MonoBehaviour
 
     void Jump()
     {
-        if (jumpDown && !isJump && moveVector == Vector3.zero && !isDodge && !isSwap && !isShop) {
+        if (jumpDown && !isJump && moveVector == Vector3.zero && !isDodge && !isSwap && !isShop && !isDead) {
             // 중력값을 크게 주면 점프 크기가 작아진다
             // 따라서 중력을 늘리면서 점프 크기를 유지하려면 여기서 더 큰 값을 곱해주면 됨
             rigid.AddForce(Vector3.up * 15, ForceMode.Impulse);
@@ -215,7 +220,7 @@ public class Player : MonoBehaviour
         isReadyToAttack = equipWeapon.rate < attackDelay;
 
         // 공격 키를 누르고 공격 준비가 되고 피하거나 무기 교환 중이 아닌경우
-        if (attackDown && isReadyToAttack && !isDodge && !isSwap && !isShop)
+        if (attackDown && isReadyToAttack && !isDodge && !isSwap && !isShop && !isDead)
         {
             equipWeapon.Use();
             anim.SetTrigger(equipWeapon.type == Weapon.Type.Melee ? "doSwing" : "doShot");
@@ -265,12 +270,12 @@ public class Player : MonoBehaviour
 
         if (ammo == 0) return;
 
-        if (reloadDown && !isJump && !isDodge && !isSwap && isReadyToAttack && !isShop)
+        if (reloadDown && !isJump && !isDodge && !isSwap && isReadyToAttack && !isShop && !isDead)
         {
             anim.SetTrigger("doReload");
             isReload = true;
 
-            Invoke("ReloadOut", 1f);
+            Invoke("ReloadOut", 0.5f);
         }
     }
 
@@ -285,7 +290,7 @@ public class Player : MonoBehaviour
 
     void Dodge()
     {
-        if (jumpDown && !isJump && moveVector != Vector3.zero && !isDodge && !isSwap && !isShop) {
+        if (jumpDown && !isJump && moveVector != Vector3.zero && !isDodge && !isSwap && !isShop && !isDead) {
             dodgeVector = moveVector;
             speed *= 2;
             anim.SetTrigger("doDodge");
@@ -322,7 +327,7 @@ public class Player : MonoBehaviour
         if (swapDown2) weaponIndex = 1;
         if (swapDown3) weaponIndex = 2;
 
-        if ((swapDown1 || swapDown2 || swapDown3) && !isJump && !isDodge)
+        if ((swapDown1 || swapDown2 || swapDown3) && !isJump && !isDodge && !isDead)
         {
             // 빈손인 경우에 조건을 추가하자
             if (equipWeapon != null)
@@ -352,7 +357,7 @@ public class Player : MonoBehaviour
     {
         // 아이템 근처에서 q키를 눌렀을 경우를 조건으로 설정
         // 점프나 회피 중에는 아이템 못먹게 막기
-        if (interactionDown && nearObject != null && !isJump && !isDodge)
+        if (interactionDown && nearObject != null && !isJump && !isDodge && !isDead)
         {
             if (nearObject.tag == "Weapon")
             {
@@ -449,6 +454,9 @@ public class Player : MonoBehaviour
         if (isBossAttack)
             rigid.AddForce(transform.forward * -25, ForceMode.Impulse);
 
+        if (health <= 0 && !isDead)
+            OnDie();
+
         yield return new WaitForSeconds(1f);
 
         isDamaged = false;
@@ -460,6 +468,13 @@ public class Player : MonoBehaviour
         // 1초후에 넉백 멈춰!
         if (isBossAttack)
             rigid.velocity = Vector3.zero;
+    }
+
+    void OnDie()
+    {
+        anim.SetTrigger("doDie");
+        isDead = true;
+        manager.GameOver();
     }
 
     void FreezeRotation()

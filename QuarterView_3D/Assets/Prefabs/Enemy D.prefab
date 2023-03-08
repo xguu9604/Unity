@@ -103,11 +103,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enemyType: 3
-  maxHealth: 100
-  curHealth: 100
+  maxHealth: 3000
+  curHealth: 3000
+  score: 500
+  gameManager: {fileID: 0}
   target: {fileID: 0}
   meleeArea: {fileID: 6554340326680370695}
   bullet: {fileID: 3440357169082099276, guid: 8cef1e1cdc1fb5b47919bb9c0ba4d5af, type: 3}
+  coins:
+  - {fileID: 8601086283902466961, guid: f16d3018ce16e334fa2ac169c805bc0d, type: 3}
+  - {fileID: 364198795933974703, guid: 6c008723310c9dc4b8e96dc14cf0a332, type: 3}
+  - {fileID: 585727204756059563, guid: ed979c5bfeecfac47b6448f0060fee55, type: 3}
   isChase: 0
   isAttack: 0
   isDead: 0
@@ -240,7 +246,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 311f55bc29dc2ae449a5dab56f7f7bd7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  damage: 25
+  damage: 80
   isMelee: 1
   isRock: 0
 --- !u!1001 &7091276908621084084

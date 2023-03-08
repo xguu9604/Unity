@@ -4957,7 +4957,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   type: 1
-  value: 0
+  value: 500
 --- !u!54 &2824887971503619197
 Rigidbody:
   m_ObjectHideFlags: 0
