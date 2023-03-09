@@ -14,6 +14,7 @@ public class HitBox : MonoBehaviour
     public int score;
     // 몹이 죽었을 때 몬스터 카운팅에 적용하기 위해 불러오기
     public GameManager gameManager;
+
     public Transform target;
     public BoxCollider meleeArea;
     public GameObject bullet;
@@ -40,7 +41,7 @@ public class HitBox : MonoBehaviour
         anim = GetComponentInChildren<Animator>();
 
 
-        if (enemyType != Type.D) 
+        if (enemyType != Type.D)
             // 생성 후 2초후에 따라다니기 시작
             Invoke("ChaseStart", 2);
     }
@@ -65,7 +66,12 @@ public class HitBox : MonoBehaviour
     // 플레이어와 부딪히고 나서 밀리면 한없이 밀리기만 하는 버그 방지
     void FreezeVelocity ()
     {
-        if (isChase)
+        if (isChase && enemyType != Type.D)
+        {
+            rigid.velocity = Vector3.zero;
+            rigid.angularVelocity = Vector3.zero;
+        }
+        else
         {
             rigid.velocity = Vector3.zero;
             rigid.angularVelocity = Vector3.zero;
@@ -158,6 +164,7 @@ public class HitBox : MonoBehaviour
         isChase = true;
         isAttack = false;
         anim.SetBool("isAttack", false);
+
 
     }
 
