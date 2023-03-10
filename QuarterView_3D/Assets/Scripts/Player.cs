@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+    // 플레이어의 이속
     public float speed;
     // 플레이어가 가질 수 있는 무기 종류의 배열
     public GameObject[] weapons;
@@ -202,7 +203,7 @@ public class Player : MonoBehaviour
         if (jumpDown && !isJump && moveVector == Vector3.zero && !isDodge && !isSwap && !isShop && !isDead) {
             // 중력값을 크게 주면 점프 크기가 작아진다
             // 따라서 중력을 늘리면서 점프 크기를 유지하려면 여기서 더 큰 값을 곱해주면 됨
-            rigid.AddForce(Vector3.up * 15, ForceMode.Impulse);
+            rigid.AddForce(Vector3.up * 7 , ForceMode.Impulse);
 
             anim.SetBool("isJump", true);
             anim.SetTrigger("doJump");

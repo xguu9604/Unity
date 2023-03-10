@@ -362,6 +362,7 @@
 "Assets/Scripts/Missile.cs"
 "Assets/Scripts/Orbit.cs"
 "Assets/Scripts/Player.cs"
+"Assets/Scripts/PlayerBoy.cs"
 "Assets/Scripts/Shop.cs"
 "Assets/Scripts/Slime.cs"
 "Assets/Scripts/StartZone.cs"
