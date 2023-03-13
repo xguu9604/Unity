@@ -178,8 +178,10 @@ public class HitBox : MonoBehaviour
     {
         if (other.tag == "Melee")
         {
-            Weapon weapon = other.GetComponent<Weapon>();
-            curHealth -= weapon.damage;
+            // Weapon weapon = other.GetComponent<Weapon>();
+            Sword sword = other.GetComponent<Sword>();
+            curHealth -= sword.damage;
+            // curHealth -= weapon.damage;
             // 무기에게 피격당한 방향
             Vector3 reactVector = transform.position - other.transform.position;
             StartCoroutine(OnDamage(reactVector, false));

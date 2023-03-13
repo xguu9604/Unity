@@ -21,6 +21,8 @@ public class PlayerBoy : MonoBehaviour
 
     bool walkDown;
     bool attackDown;
+    bool jumpDown;
+    bool spinDown;
 
     bool isReadyToAttack = true;
 
@@ -34,6 +36,9 @@ public class PlayerBoy : MonoBehaviour
     Animator anim;
 
     float attackDelay;
+    float attackRate = 0.7f;
+
+    public Sword sword;
 
     void Awake()
     {
@@ -48,20 +53,24 @@ public class PlayerBoy : MonoBehaviour
         Turn();
         Attack();
         Dodge();
+        SpinAttack();
     }
 
     void GetInput()
     {
         horizontalAxis = Input.GetAxisRaw("Horizontal");
         verticalAxis = Input.GetAxisRaw("Vertical");
+        jumpDown = Input.GetButtonDown("Jump");
+        attackDown = Input.GetButtonDown("Fire1");
+        spinDown = Input.GetButtonDown("Fire2");
     }
 
     void Move()
     {
         moveVector = new Vector3(horizontalAxis, 0, verticalAxis).normalized;
 
-        if (!isReadyToAttack)
-            moveVector = Vector3.zero;
+        // if (!isReadyToAttack)
+        //    moveVector = Vector3.zero;
 
         if (!isBorder)
             transform.position += moveVector * speed * Time.deltaTime;
@@ -91,23 +100,46 @@ public class PlayerBoy : MonoBehaviour
     {
         attackDelay += Time.deltaTime;
 
+        isReadyToAttack = attackRate < attackDelay;
+
         if (attackDown && isReadyToAttack)
         {
+            sword.Use();
             anim.SetTrigger("doAttack");
+            attackDelay = 0;
         }
     }
 
     void Dodge()
     {
-        dodgeVector = moveVector;
-        speed *= 2;
-        anim.SetTrigger("doDodge");
+        if (jumpDown)
+        {
+            dodgeVector = moveVector;
+            speed *= 4;
+            anim.SetTrigger("doDodge");
 
-        Invoke("DodgeOut", 0.4f);
+            Invoke("DodgeOut", 0.4f);
+        }
     }
 
     void DodgeOut()
     {
-        speed *= 0.5f;
+        speed *= 0.25f;
+    }
+
+    void SpinAttack()
+    {
+        attackDelay += Time.deltaTime;
+
+        float spinAttackRate = 1.0f;
+
+        isReadyToAttack = spinAttackRate < attackDelay;
+
+        if (spinDown && isReadyToAttack)
+        {
+            sword.Use();
+            anim.SetTrigger("doSpinAttack");
+            attackDelay = 0;
+        }
     }
 }

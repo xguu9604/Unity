@@ -366,6 +366,7 @@
 "Assets/Scripts/Shop.cs"
 "Assets/Scripts/Slime.cs"
 "Assets/Scripts/StartZone.cs"
+"Assets/Scripts/Sword.cs"
 "Assets/Scripts/Weapon.cs"
 -langversion:9.0
 
